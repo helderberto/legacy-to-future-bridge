@@ -23,49 +23,92 @@ export const convertCode = async ({
   fromLanguage,
   toLanguage,
   apiKey,
+  provider,
 }: {
   code: string;
   fromLanguage: string;
   toLanguage: string;
   apiKey: string;
+  provider: string;
 }) => {
   if (!apiKey) {
-    throw new Error("Perplexity API key is required.");
+    throw new Error(`${provider} API key is required.`);
+  }
+
+  const systemPrompt = getSystemPrompt(fromLanguage, toLanguage);
+  const userPrompt = `Convert the following ${fromLanguage} code to ${toLanguage}:\n\n\`\`\`\n${code}\n\`\`\``;
+
+  let url = '';
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  let body: Record<string, any> = {};
+
+  switch (provider) {
+    case 'Perplexity':
+      url = 'https://api.perplexity.ai/chat/completions';
+      headers['Authorization'] = `Bearer ${apiKey}`;
+      body = {
+        model: 'llama-3.1-sonar-large-128k-online',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.1,
+      };
+      break;
+    case 'OpenAI':
+      url = 'https://api.openai.com/v1/chat/completions';
+      headers['Authorization'] = `Bearer ${apiKey}`;
+      body = {
+        model: 'gpt-4.1-2025-04-14',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.1,
+      };
+      break;
+    case 'Claude':
+      url = 'https://api.anthropic.com/v1/messages';
+      headers['x-api-key'] = apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      body = {
+        model: 'claude-opus-4-20250514',
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+        max_tokens: 4096,
+        temperature: 0.1,
+      };
+      break;
+    default:
+      throw new Error(`Unsupported API provider: ${provider}`);
   }
 
   try {
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: getSystemPrompt(fromLanguage, toLanguage),
-          },
-          {
-            role: 'user',
-            content: `Convert the following ${fromLanguage} code to ${toLanguage}:\n\n\`\`\`\n${code}\n\`\`\``
-          }
-        ],
-        temperature: 0.1,
-      }),
+      headers,
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error("API Error:", errorData);
-      throw new Error(`API request failed with status ${response.status}`);
+      throw new Error(`API request to ${provider} failed with status ${response.status}`);
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    
+    switch (provider) {
+      case 'Perplexity':
+      case 'OpenAI':
+        return data.choices[0].message.content;
+      case 'Claude':
+        return data.content[0].text;
+      default:
+        throw new Error(`Unsupported response format for provider: ${provider}`);
+    }
   } catch (error) {
-    console.error("Failed to convert code:", error);
+    console.error(`Failed to convert code with ${provider}:`, error);
     throw error;
   }
 };

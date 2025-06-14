@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Wand2, Download, GitBranch, RotateCcw } from "lucide-react";
 import { convertCode } from "@/lib/api";
@@ -16,6 +18,7 @@ import { downloadFile } from "@/lib/download";
 
 const techStacks = ["React", "Vue", "Svelte", "Angular", "English"];
 const fromLanguages = ["Ember", "Backbone.js", "jQuery", "AngularJS", "Vanilla JS"];
+const apiProviders = ["Perplexity", "OpenAI", "Claude"];
 
 const sampleEmberCode = `import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
@@ -43,23 +46,22 @@ export default class CounterComponent extends Component {
 </div>
 `;
 
-// IMPORTANT: Replace this with your actual Perplexity API key.
-const PERPLEXITY_API_KEY = "YOUR_PERPLEXITY_API_KEY_HERE";
-
 const Index = () => {
   const [legacyCode, setLegacyCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   const [targetStack, setTargetStack] = useState("React");
   const [fromLanguage, setFromLanguage] = useState("Ember");
   const [isLoading, setIsLoading] = useState(false);
+  const [apiProvider, setApiProvider] = useState("Perplexity");
+  const [apiKey, setApiKey] = useState("");
 
   const handleConvert = async () => {
     if (!legacyCode) {
       toast.error("Please paste your legacy code first.");
       return;
     }
-    if (PERPLEXITY_API_KEY === "YOUR_PERPLEXITY_API_KEY_HERE") {
-      toast.error("Please set your Perplexity API key in the code.");
+    if (!apiKey) {
+      toast.error(`Please enter your ${apiProvider} API key.`);
       return;
     }
 
@@ -71,7 +73,8 @@ const Index = () => {
         code: legacyCode,
         fromLanguage,
         toLanguage: targetStack,
-        apiKey: PERPLEXITY_API_KEY,
+        apiKey,
+        provider: apiProvider,
       });
       setGeneratedCode(result);
       toast.success("Conversion successful!");
@@ -98,6 +101,32 @@ const Index = () => {
           <h1 className="text-2xl font-bold tracking-tight">Legacy Code Converter</h1>
         </div>
       </header>
+
+      <section className="py-6 border-b border-border">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end max-w-2xl mx-auto">
+          <div>
+            <Label htmlFor="api-provider">API Provider</Label>
+            <Select value={apiProvider} onValueChange={setApiProvider}>
+              <SelectTrigger id="api-provider">
+                <SelectValue placeholder="Select Provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {apiProviders.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="api-key">API Key</Label>
+            <Input
+              id="api-key"
+              type="password"
+              placeholder={`Your ${apiProvider} API Key`}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
 
       <main className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 pt-6">
         <div className="flex flex-col gap-4">
