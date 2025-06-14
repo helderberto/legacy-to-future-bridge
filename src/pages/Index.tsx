@@ -86,7 +86,7 @@ export default class UserPostsComponent extends Component {
     this.isLoading = true;
     this.error = null;
     try {
-      let response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+      let response = await fetch('https://jsonplaceholder.typicode.com/posts/' + id, {
         method: 'DELETE',
       });
       if (response.ok) {
