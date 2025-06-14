@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,12 +10,38 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Wand2, Download, GitBranch } from "lucide-react";
+import { Wand2, Download, GitBranch, RotateCcw } from "lucide-react";
 import { convertCode } from "@/lib/api";
 import { downloadFile } from "@/lib/download";
 
 const techStacks = ["React", "Vue", "Svelte", "Angular", "English"];
 const fromLanguages = ["Ember", "Backbone.js", "jQuery", "AngularJS", "Vanilla JS"];
+
+const sampleEmberCode = `import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
+
+export default class CounterComponent extends Component {
+  @tracked count = 0;
+
+  @action
+  increment() {
+    this.count += 1;
+  }
+
+  @action
+  decrement() {
+    this.count -= 1;
+  }
+}
+
+// template.hbs
+<div class="counter">
+  <p>Count: {{this.count}}</p>
+  <button {{on "click" this.increment}}>+</button>
+  <button {{on "click" this.decrement}}>-</button>
+</div>
+`;
 
 const Index = () => {
   const [legacyCode, setLegacyCode] = useState("");
@@ -55,6 +80,12 @@ const Index = () => {
     }
   };
 
+  const handleReset = () => {
+    setLegacyCode("");
+    setGeneratedCode("");
+    toast.info("Fields cleared.");
+  };
+
   const isDocumentation = targetStack.toLowerCase() === 'english';
 
   return (
@@ -77,9 +108,12 @@ const Index = () => {
 
       <main className="flex-grow grid grid-cols-1 lg:grid-cols-2 gap-8 pt-6">
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold">Legacy Code</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Legacy Code</h2>
+            <Button variant="link" className="text-muted-foreground" onClick={() => setLegacyCode(sampleEmberCode)}>Load Sample</Button>
+          </div>
           <Textarea
-            placeholder="Paste your legacy code here..."
+            placeholder="Paste your legacy code here, or load a sample."
             className="flex-grow resize-none font-mono text-sm bg-secondary/50 border-border"
             value={legacyCode}
             onChange={(e) => setLegacyCode(e.target.value)}
@@ -120,6 +154,10 @@ const Index = () => {
           <Button onClick={handleConvert} disabled={isLoading} className="bg-primary text-primary-foreground hover:bg-primary/90">
             <Wand2 className="mr-2 h-4 w-4" />
             {isLoading ? "Converting..." : "Convert"}
+          </Button>
+          <Button variant="outline" onClick={handleReset} disabled={isLoading}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset
           </Button>
         </div>
         <div className="flex items-center gap-2">
