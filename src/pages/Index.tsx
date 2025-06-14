@@ -313,14 +313,22 @@ const Index = () => {
     setGeneratedCode("");
 
     if (apiProvider === 'Demo') {
-      // Simulate API call for demo purposes
       setTimeout(() => {
-        setGeneratedCode(
-          targetStack.toLowerCase() === 'english' ? sampleMigrationDocument : sampleReactCode
-        );
+        let demoResult = "";
+        if (targetStack.toLowerCase() === 'english') {
+          // Show migration/analysis doc for actual input
+          demoResult = generateLegacyAnalysisMarkdown(legacyCode);
+        } else {
+          // Show code demo for actual input
+          const legacyLines = legacyCode.split("\n").slice(0, 12).join("\n");
+          demoResult = `// Conversion demo: from ${fromLanguage} to ${targetStack}
+${legacyLines ? legacyLines : "// (No code provided)"} 
+// ... conversion continues ...`;
+        }
+        setGeneratedCode(demoResult);
         toast.success("Demo conversion successful!");
         setIsLoading(false);
-      }, 1500);
+      }, 900);
       return;
     }
 
