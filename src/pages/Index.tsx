@@ -1,6 +1,12 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import CodeMirror from "@uiw/react-codemirror";
+import { javascript } from "@codemirror/lang-javascript";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { languageData } from "@codemirror/language-data";
+import { vscodeDark } from "@uiw/codemirror-theme-vscode";
+import { placeholder as codemirrorPlaceholder } from "@codemirror/view";
 import {
   Select,
   SelectContent,
@@ -138,6 +144,18 @@ const Index = () => {
 
   const isDocumentation = targetStack.toLowerCase() === 'english';
 
+  const legacyEditorExtensions = [
+    javascript({ jsx: true }),
+    codemirrorPlaceholder("Paste your legacy code here, or load a sample."),
+  ];
+
+  const generatedCodeExtensions = [
+    ...(isDocumentation
+      ? [markdown({ base: markdownLanguage, codeLanguages: languageData })]
+      : [javascript({ jsx: true })]),
+    codemirrorPlaceholder("Your new code will appear here."),
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col p-4 md:p-6 lg:p-8 font-sans">
       <header className="flex flex-col sm:flex-row justify-between items-center pb-6 border-b border-border">
@@ -181,23 +199,29 @@ const Index = () => {
             <h2 className="text-lg font-semibold">Legacy Code</h2>
             <Button variant="link" className="text-muted-foreground" onClick={() => setLegacyCode(sampleEmberCode)}>Load Sample</Button>
           </div>
-          <Textarea
-            placeholder="Paste your legacy code here, or load a sample."
-            className="flex-grow resize-none font-mono text-sm bg-secondary/50 border-border"
-            value={legacyCode}
-            onChange={(e) => setLegacyCode(e.target.value)}
-            rows={20}
-          />
+          <div className="flex-grow min-h-[480px] rounded-md border border-input overflow-hidden text-sm">
+            <CodeMirror
+              value={legacyCode}
+              height="100%"
+              theme={vscodeDark}
+              extensions={legacyEditorExtensions}
+              onChange={setLegacyCode}
+              style={{ height: '100%' }}
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold">{isDocumentation ? "Migration Document" : "Generated Code"}</h2>
-          <Textarea
-            placeholder={isLoading ? "Generating..." : "Your new code will appear here."}
-            className="flex-grow resize-none font-mono text-sm bg-secondary/50 border-border"
-            value={generatedCode}
-            readOnly
-            rows={20}
-          />
+          <div className="flex-grow min-h-[480px] rounded-md border border-input overflow-hidden text-sm">
+            <CodeMirror
+              value={isLoading ? "Generating..." : generatedCode}
+              height="100%"
+              theme={vscodeDark}
+              extensions={generatedCodeExtensions}
+              readOnly
+              style={{ height: '100%' }}
+            />
+          </div>
         </div>
       </main>
 
