@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +17,7 @@ import { downloadFile } from "@/lib/download";
 
 const techStacks = ["React", "Vue", "Svelte", "Angular", "English"];
 const fromLanguages = ["Ember", "Backbone.js", "jQuery", "AngularJS", "Vanilla JS"];
-const apiProviders = ["Perplexity", "OpenAI", "Claude"];
+const apiProviders = ["Demo", "Perplexity", "OpenAI", "Claude"];
 
 const sampleEmberCode = `import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
@@ -46,13 +45,49 @@ export default class CounterComponent extends Component {
 </div>
 `;
 
+const sampleReactCode = `import React, { useState } from 'react';
+
+const Counter = () => {
+  const [count, setCount] = useState(0);
+
+  const increment = () => {
+    setCount(count + 1);
+  };
+
+  const decrement = () => {
+    setCount(count - 1);
+  };
+
+  return (
+    <div className="counter p-4 border rounded-lg">
+      <p className="mb-4">Count: {count}</p>
+      <div className="flex gap-2">
+        <button
+          onClick={increment}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          +
+        </button>
+        <button
+          onClick={decrement}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          -
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Counter;`;
+
 const Index = () => {
   const [legacyCode, setLegacyCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   const [targetStack, setTargetStack] = useState("React");
   const [fromLanguage, setFromLanguage] = useState("Ember");
   const [isLoading, setIsLoading] = useState(false);
-  const [apiProvider, setApiProvider] = useState("Perplexity");
+  const [apiProvider, setApiProvider] = useState("Demo");
   const [apiKey, setApiKey] = useState("");
 
   const handleConvert = async () => {
@@ -60,13 +95,23 @@ const Index = () => {
       toast.error("Please paste your legacy code first.");
       return;
     }
-    if (!apiKey) {
+    if (apiProvider !== 'Demo' && !apiKey) {
       toast.error(`Please enter your ${apiProvider} API key.`);
       return;
     }
 
     setIsLoading(true);
     setGeneratedCode("");
+
+    if (apiProvider === 'Demo') {
+      // Simulate API call for demo purposes
+      setTimeout(() => {
+        setGeneratedCode(sampleReactCode);
+        toast.success("Demo conversion successful!");
+        setIsLoading(false);
+      }, 1500);
+      return;
+    }
 
     try {
       const result = await convertCode({
@@ -104,7 +149,7 @@ const Index = () => {
 
       <section className="py-6 border-b border-border">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end max-w-2xl mx-auto">
-          <div>
+          <div className={apiProvider === 'Demo' ? 'md:col-span-2' : ''}>
             <Label htmlFor="api-provider">API Provider</Label>
             <Select value={apiProvider} onValueChange={setApiProvider}>
               <SelectTrigger id="api-provider">
@@ -115,16 +160,18 @@ const Index = () => {
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label htmlFor="api-key">API Key</Label>
-            <Input
-              id="api-key"
-              type="password"
-              placeholder={`Your ${apiProvider} API Key`}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-            />
-          </div>
+          {apiProvider !== 'Demo' && (
+            <div>
+              <Label htmlFor="api-key">API Key</Label>
+              <Input
+                id="api-key"
+                type="password"
+                placeholder={`Your ${apiProvider} API Key`}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+            </div>
+          )}
         </div>
       </section>
 
