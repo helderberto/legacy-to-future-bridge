@@ -308,7 +308,6 @@ const Index = () => {
       toast.error(`Please enter your ${apiProvider} API key.`);
       return;
     }
-
     setIsLoading(true);
     setGeneratedCode("");
 
@@ -319,11 +318,8 @@ const Index = () => {
           // Show migration/analysis doc for actual input
           demoResult = generateLegacyAnalysisMarkdown(legacyCode);
         } else {
-          // Show code demo for actual input
-          const legacyLines = legacyCode.split("\n").slice(0, 12).join("\n");
-          demoResult = `// Conversion demo: from ${fromLanguage} to ${targetStack}
-${legacyLines ? legacyLines : "// (No code provided)"} 
-// ... conversion continues ...`;
+          // For Demo, return mock transformed component matching legacy features
+          demoResult = sampleReactCode;
         }
         setGeneratedCode(demoResult);
         toast.success("Demo conversion successful!");
