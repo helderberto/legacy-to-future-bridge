@@ -10,9 +10,8 @@ import { convertCode } from "@/lib/api";
 import {
   apiProviders,
   fromLanguages,
-  sampleEmberCode,
-  sampleReactCodeFromLegacy,
   techStacks,
+  getSampleCode,
 } from "@/lib/samples";
 import { generateLegacyAnalysisMarkdown } from "@/lib/markdown";
 import { PageHeader } from "./components/PageHeader";
@@ -108,6 +107,15 @@ ${legacyLines ? legacyLines : "// (No code provided)"}
     codemirrorPlaceholder("Your new code will appear here."),
   ];
 
+  const handleSampleLoad = () => {
+    const sample = getSampleCode(fromLanguage);
+    if (!sample) {
+      toast.error("No sample available for this selection.");
+    } else {
+      setLegacyCode(sample);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col p-4 md:p-6 lg:p-8 font-sans">
       <PageHeader />
@@ -127,7 +135,7 @@ ${legacyLines ? legacyLines : "// (No code provided)"}
           onChange={setLegacyCode}
           extensions={legacyEditorExtensions}
           actionButton={
-            <Button variant="link" className="text-muted-foreground" onClick={() => setLegacyCode(sampleEmberCode)}>
+            <Button variant="link" className="text-muted-foreground" onClick={handleSampleLoad}>
               Load Sample
             </Button>
           }
