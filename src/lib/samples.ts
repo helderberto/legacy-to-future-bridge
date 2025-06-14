@@ -483,6 +483,252 @@ const UserPosts = () => {
 
 export default UserPosts;`;
 
+export const sampleVueCodeFromLegacy = `<template>
+  <div class="user-posts">
+    <div class="actions">
+      <button @click="refreshPosts">Refresh</button>
+      <button @click="addPost">Add Post</button>
+    </div>
+    <div class="inputs">
+      <input v-model="newPost.title" placeholder="Title" />
+      <input v-model="newPost.body" placeholder="Body" />
+    </div>
+    <div v-if="isLoading">Loading...</div>
+    <div v-else-if="error" class="error">Error: {{ error }}</div>
+    <ul v-else>
+      <li v-for="post in posts" :key="post.id">
+        <strong>{{ post.title }}</strong>
+        <p>{{ post.body }}</p>
+        <button @click="deletePost(post.id)">Delete</button>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "UserPosts",
+  data() {
+    return {
+      posts: [],
+      isLoading: false,
+      error: null,
+      newPost: { title: "", body: "" },
+    };
+  },
+  created() {
+    this.fetchPosts();
+  },
+  methods: {
+    async fetchPosts() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/posts?userId=1');
+        this.posts = await res.json();
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    refreshPosts() {
+      this.fetchPosts();
+    },
+    async addPost() {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/posts', {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.newPost.title ? this.newPost : { title: "New Post", body: "This is a new post." }),
+        });
+        const data = await res.json();
+        this.posts.push(data);
+        this.newPost = { title: "", body: "" };
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async deletePost(id) {
+      this.isLoading = true;
+      this.error = null;
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/posts/' + id, { method: "DELETE" });
+        if (res.ok) {
+          this.posts = this.posts.filter(post => post.id !== id);
+        } else {
+          this.error = "Failed to delete post";
+        }
+      } catch (err) {
+        this.error = err.message;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+  },
+};
+</script>
+`;
+
+export const sampleSvelteCodeFromLegacy = `<script>
+  import { onMount } from 'svelte';
+  let posts = [];
+  let isLoading = false;
+  let error = null;
+  let newPost = { title: '', body: '' };
+
+  async function fetchPosts() {
+    isLoading = true;
+    error = null;
+    try {
+      const res = await fetch('https://jsonplaceholder.typicode.com/posts?userId=1');
+      posts = await res.json();
+    } catch (e) {
+      error = e.message;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  function refreshPosts() {
+    fetchPosts();
+  }
+
+  async function addPost() {
+    isLoading = true;
+    error = null;
+    try {
+      const res = await fetch('https://jsonplaceholder.typicode.com/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPost.title ? newPost : { title: "New Post", body: "This is a new post." }),
+      });
+      const data = await res.json();
+      posts = [...posts, data];
+      newPost = { title: '', body: '' };
+    } catch (e) {
+      error = e.message;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  async function deletePost(id) {
+    isLoading = true;
+    error = null;
+    try {
+      const res = await fetch('https://jsonplaceholder.typicode.com/posts/' + id, { method: 'DELETE' });
+      if (res.ok) {
+        posts = posts.filter(post => post.id !== id);
+      } else {
+        error = "Failed to delete post";
+      }
+    } catch (e) {
+      error = e.message;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  onMount(fetchPosts);
+</script>
+
+<div class="user-posts">
+  <div>
+    <button on:click={refreshPosts}>Refresh</button>
+    <button on:click={addPost}>Add Post</button>
+  </div>
+  <div>
+    <input type="text" placeholder="Title" bind:value={newPost.title} />
+    <input type="text" placeholder="Body" bind:value={newPost.body} />
+  </div>
+  {#if isLoading}
+    <p>Loading...</p>
+  {:else if error}
+    <p class="error">Error: {error}</p>
+  {:else}
+    <ul>
+      {#each posts as post}
+        <li>
+          <strong>{post.title}</strong>
+          <p>{post.body}</p>
+          <button on:click={() => deletePost(post.id)}>Delete</button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>
+`;
+
+export const sampleAngularCodeFromLegacy = `import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-user-posts',
+  template: \`
+    <div class="user-posts">
+      <button (click)="refreshPosts()">Refresh</button>
+      <button (click)="addPost()">Add Post</button>
+      <input [(ngModel)]="newPost.title" placeholder="Title" />
+      <input [(ngModel)]="newPost.body" placeholder="Body" />
+      <div *ngIf="isLoading">Loading...</div>
+      <div *ngIf="error" class="error">Error: {{ error }}</div>
+      <ul>
+        <li *ngFor="let post of posts">
+          <strong>{{ post.title }}</strong>
+          <p>{{ post.body }}</p>
+          <button (click)="deletePost(post.id)">Delete</button>
+        </li>
+      </ul>
+    </div>
+  \`,
+  styles: []
+})
+export class UserPostsComponent implements OnInit {
+  posts = [];
+  isLoading = false;
+  error = '';
+  newPost = { title: '', body: '' };
+  constructor(private http: HttpClient) {}
+  ngOnInit() {
+    this.fetchPosts();
+  }
+  fetchPosts() {
+    this.isLoading = true;
+    this.error = '';
+    this.http.get<any[]>('https://jsonplaceholder.typicode.com/posts?userId=1')
+      .subscribe(
+        data => { this.posts = data; this.isLoading = false; },
+        err => { this.error = 'Failed to load posts.'; this.isLoading = false; }
+      );
+  }
+  refreshPosts() { this.fetchPosts(); }
+  addPost() {
+    this.isLoading = true;
+    this.error = '';
+    const body = this.newPost.title ? this.newPost : { title: 'New Post', body: 'This is a new post.' };
+    this.http.post<any>('https://jsonplaceholder.typicode.com/posts', body)
+      .subscribe(
+        data => { this.posts.push(data); this.newPost = { title: '', body: '' }; this.isLoading = false; },
+        err => { this.error = 'Failed to add post.'; this.isLoading = false; }
+      );
+  }
+  deletePost(id: number) {
+    this.isLoading = true;
+    this.error = '';
+    this.http.delete('https://jsonplaceholder.typicode.com/posts/' + id)
+      .subscribe(
+        () => { this.posts = this.posts.filter(post => post.id !== id); this.isLoading = false; },
+        err => { this.error = 'Failed to delete post.'; this.isLoading = false; }
+      );
+  }
+}
+`;
+
 export const getSampleCode = (language: string) => {
   switch (language.toLowerCase()) {
     case "ember":
@@ -497,7 +743,20 @@ export const getSampleCode = (language: string) => {
       return sampleBackboneCode;
     case "react":
       return sampleReactCodeFromLegacy;
+    case "vue":
+      return sampleVueCodeFromLegacy;
+    case "svelte":
+      return sampleSvelteCodeFromLegacy;
+    case "angular":
+      return sampleAngularCodeFromLegacy;
     default:
       return "";
   }
+};
+
+export {
+  sampleReactCodeFromLegacy,
+  sampleVueCodeFromLegacy,
+  sampleSvelteCodeFromLegacy,
+  sampleAngularCodeFromLegacy
 };

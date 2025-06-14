@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { javascript } from "@codemirror/lang-javascript";
@@ -12,6 +11,10 @@ import {
   fromLanguages,
   techStacks,
   getSampleCode,
+  sampleReactCodeFromLegacy,
+  sampleVueCodeFromLegacy,
+  sampleSvelteCodeFromLegacy,
+  sampleAngularCodeFromLegacy,
 } from "@/lib/samples";
 import { generateLegacyAnalysisMarkdown } from "@/lib/markdown";
 import { PageHeader } from "./components/PageHeader";
@@ -108,7 +111,17 @@ ${legacyLines ? legacyLines : "// (No code provided)"}
   ];
 
   const handleSampleLoad = () => {
-    const sample = getSampleCode(fromLanguage);
+    let sample = "";
+    if (legacyCode.trim().length === 0) {
+      const stackSample = getSampleCode(targetStack);
+      if (stackSample) {
+        sample = stackSample;
+      } else {
+        sample = getSampleCode(fromLanguage);
+      }
+    } else {
+      sample = getSampleCode(fromLanguage);
+    }
     if (!sample) {
       toast.error("No sample available for this selection.");
     } else {
