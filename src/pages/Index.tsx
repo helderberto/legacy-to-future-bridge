@@ -31,8 +31,10 @@ import fetch from 'fetch';
 
 export default class UserPostsComponent extends Component {
   @tracked posts = [];
+  @tracked currentPage = 1;
   @tracked isLoading = false;
   @tracked error = null;
+  @tracked isAuthenticated = false;
 
   constructor() {
     super(...arguments);
@@ -57,11 +59,51 @@ export default class UserPostsComponent extends Component {
   refreshPosts() {
     this.fetchPosts();
   }
+
+  @action
+  async addPost(title, body) {
+    this.isLoading = true;
+    this.error = null;
+    try {
+      let response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, body }),
+      });
+      let data = await response.json();
+      this.posts.push(data);
+    } catch (e) {
+      this.error = e;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  @action
+  async deletePost(id) {
+    this.isLoading = true;
+    this.error = null;
+    try {
+      let response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        this.posts = this.posts.filter(post => post.id !== id);
+      }
+    } catch (e) {
+      this.error = e;
+    } finally {
+      this.isLoading = false;
+    }
+  }
 }
 
 // template.hbs
 <div class="user-posts">
   <button {{on "click" this.refreshPosts}}>Refresh</button>
+  <button {{on "click" this.addPost "New Post" "This is a new post."}}>Add Post</button>
   {{#if this.isLoading}}
     <p>Loading...</p>
   {{else if this.error}}
@@ -118,47 +160,71 @@ export default Counter;`;
 const sampleMigrationDocument = `# Migration Analysis: Ember UserPosts Component ➡️ Modern Tech Stack
 
 ## 1. Overview
-The legacy code is an Ember component that fetches and displays posts for a user from an external API (\`jsonplaceholder.typicode.com\`). The component handles loading, displays errors, and supports refreshing data on demand.
+The legacy code is an Ember component that fetches and displays posts for a user from an external API (\`jsonplaceholder.typicode.com\`). The component handles loading, displays errors, supports user authentication, paginates posts, and allows post deletion and creation.
 
 ## 2. Key Components
-- **UserPostsComponent (JavaScript class):** Contains state for posts, loading, and error. Encapsulates all logic for data fetching and refreshing.
-- **Template (Handlebars):** Renders a button, loading and error states, and lists fetched posts.
+- **UserPostsComponent (JavaScript class):** Contains state for posts, current page, user authentication, loading, and errors. Manages async data fetching, post operations, and user permissions.
+- **Template (Handlebars):** Renders buttons for loading, adding, and deleting posts, handles multiple UI states (loading, error, paginated list, etc.), binds to component actions.
 
 ## 3. Data Flow
-- On instantiation, the component automatically fetches posts from an external API.
-- State variables (\`posts\`, \`isLoading\`, \`error\`) are tracked and trigger re-renders.
-- User interaction ("Refresh" button) calls an action to re-fetch posts.
-- Data flows from the async fetch into the component’s state, then to the UI via the template.
+- On initialization, the component fetches posts for the authenticated user from an external API.
+- State variables (\`posts\`, \`isLoading\`, \`error\`, \`currentPage\`, etc.) are reactive and updated by side-effectful actions.
+- Event handlers and API calls propagate updates through component state, which drives the UI via handlebars logic.
+- Actions enable users to refresh, paginate, create, or delete posts, interacting with both client state and remote APIs.
 
 ## 4. State Management
-- Uses Ember's \`@tracked\` decorators to make \`posts\`, \`isLoading\`, and \`error\` reactive.
-- State updates within async methods and actions automatically update the UI.
+- Uses Ember's \`@tracked\` decorators for all data properties, ensuring the template updates on state changes.
+- State updates (e.g., after API success/error) are performed atomically to prevent UI flicker.
+- Errors are tracked per operation, and clear feedback shown to users.
 
 ## 5. Migration Strategy (Based on "Working Effectively with Legacy Code")
-- **Characterize Dependencies:** The component depends on Ember decorators, the fetch polyfill, and Ember’s event system.
-- **Write Tests Around Existing Behavior:** Cover data loading, error handling, and UI updates in integration tests.
-- **Break External Dependencies:** Abstract the fetch logic to a plain JS/TS function and decouple it from Ember’s lifecycle and decorators.
-- **Extract and Isolate:** Move API logic and state management out of the Ember-specific class for easier testing.
-- **Incremental Conversion:** 
-  - First, port data fetching and state logic to the target stack's idioms (e.g., React’s useState/useEffect, Vue’s reactivity, etc.).
-  - Migrate templates, restructuring the control flow (if/else, loops) to JSX/Vue/Svelte equivalents.
-  - Replace tracked properties with the target stack's reactivity system.
-  - Validate data fetching and error handling via tests.
+- **Characterize Dependencies:** Identify reliance on Ember's decorators, fetch utility, event/action system, and handlebars block expressions.
+- **Write Tests Around Existing Behavior:** Ensure all interactive states (loading, errors, auth, post CRUD) are covered.
+- **Break External Dependencies:** Factor out API logic, authentication flows, and state mutations into standalone modules or hooks.
+- **Extract and Isolate:** Incrementally move logic from Ember classes to framework-agnostic services or utilities.
+- **Incremental Porting:** 
+  - Translate reactivity and async effects to idioms in the new stack (e.g., React hooks, Vue composables).
+  - For UI migration, map block and list control to accurate equivalents (JSX, <template v-if>, etc.).
+  - Replace event/actions with function props or composables.
+  - Test at every stage to validate behavioral parity.
+- **Refactor for Testability:** Make side effects and dependencies injectable (to support test doubles).
 
 ## 6. Potential Challenges
-- **Template Flow Differences:** Handlebars blocks must be mapped to new conditional and loop syntax.
-- **Reactivity:** Tracked properties need to be translated to hooks, computed properties, or the target system’s reactive primitives.
-- **Async Effects:** Lifecycle hooks for data fetching (\`constructor\` in Ember) should move to useEffect (React) or lifecycle hooks in Vue/Svelte.
-- **Event Binding:** {{on "click"}} must be replaced with new stack's event bindings.
-- **Testing:** Ensure error/loading states remain correctly covered after migration.
+- **Template Flow Differences:** Handlebars logic for UI states ({{#if}}, {{#each}}...) requires different syntax and sometimes refactoring to fit the new stack’s data-driven views.
+- **Reactivity:** Ember’s tracked properties must be mapped to useState/useReducer (React), ref/reactive (Vue), or appropriate Svelte/Angular tools.
+- **Async Effects:** Migrate lifecycle hooks and ensure async logic (fetches, CRUD) is compatible with the target framework’s patterns.
+- **Event Binding:** Replace {{on "action"}} with new event-binding mechanisms.
+- **Authentication:** Abstract and refactor user state/auth guards, leveraging the new stack’s libraries or utilities.
+- **Error Boundaries:** Adopt new error handling patterns where needed (e.g., Error Boundaries in React).
+
+---
+
+## 7. **Migration Design Patterns & Principles**
+
+To make the migration process smoother and less risky, apply the following design patterns and principles during refactoring:
+
+### Recommended Design Patterns
+- **Adapter Pattern:** Wrap legacy Ember APIs with new interfaces to bridge gaps while migrating functionality.
+- **Facade Pattern:** Expose a simplified API for complex modules to reduce coupling and hide implementation details that are likely to change during migration.
+- **Dependency Injection:** Decouple logic from Ember-specific systems (fetch, auth) by passing dependencies explicitly, making unit testing and replacement easier.
+- **Service Layer:** Centralize business logic and state transition logic outside UI components to facilitate gradual migration and shared logic across stacks.
+- **State Reducers:** Use reducers (or Vuex stores, context, etc.) to manage complex state transitions, making side-effects and state updates predictable.
+
+### Principles from "Working Effectively with Legacy Code"
+- **Seam Creation:** Use seams (places where you can alter behavior without editing existing code) to inject new implementations and tests.
+- **Characterization Tests:** Before refactoring, write tests that describe current behavior to guard against regressions.
+- **Sprout Method/Class:** Instead of modifying large legacy methods, create new ones ("sprouts") and shift behavior incrementally.
+- **Wrap External Dependencies:** Isolate dependencies (network, window, etc.) behind facades, making it safe to swap implementations or mock in tests.
+- **Incremental Refactoring:** Prefer safe, small, testable refactorings over big rewrites.
 
 ---
 
 **Next Steps:**  
-1. Write tests that specify post-fetching and UI behavior.
-2. Extract API logic to standalone utilities.
-3. Migrate to target stack incrementally, preserving tests at each step.
-4. Refactor and enhance as needed for idiomatic use in the new framework.
+1. Write comprehensive tests to anchor existing and to-be-migrated logic.
+2. Abstract out services and side-effects behind simple APIs/facades.
+3. Introduce seams for stepwise migration, using adapters where helpful.
+4. Gradually port UI and state layer, keeping legacy and new implementations side-by-side until completely switched.
+5. Refactor and improve for idiomatic style in the new framework only after establishing test coverage.
 
 ---
 
