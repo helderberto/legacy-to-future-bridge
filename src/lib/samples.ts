@@ -753,10 +753,3 @@ export const getSampleCode = (language: string) => {
       return "";
   }
 };
-
-export {
-  sampleReactCodeFromLegacy,
-  sampleVueCodeFromLegacy,
-  sampleSvelteCodeFromLegacy,
-  sampleAngularCodeFromLegacy
-};

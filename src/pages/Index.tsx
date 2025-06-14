@@ -58,12 +58,66 @@ const Index = () => {
             normalizedLegacy.includes("template.hbs");
 
           if (isUserPostsComponent) {
-            demoResult = sampleReactCodeFromLegacy;
+            // Legacy "UserPosts" Ember sample is loaded, show the corresponding React sample
+            if (targetStack === "React") {
+              demoResult = sampleReactCodeFromLegacy;
+            } else if (targetStack === "Vue") {
+              demoResult = sampleVueCodeFromLegacy;
+            } else if (targetStack === "Svelte") {
+              demoResult = sampleSvelteCodeFromLegacy;
+            } else if (targetStack === "Angular") {
+              demoResult = sampleAngularCodeFromLegacy;
+            } else {
+              // fallback to demo conversion
+              demoResult = getSampleCode(targetStack);
+            }
           } else {
-            const legacyLines = legacyCode.split("\n").slice(0, 12).join("\n");
-            demoResult = `// Conversion demo: from ${fromLanguage} to ${targetStack}
-${legacyLines ? legacyLines : "// (No code provided)"} 
-// ... conversion continues ...`;
+            // SPECIAL: AngularJS to Svelte (or others) -- provide a conversion instead of generic "conversion continues"
+            if (
+              fromLanguage === "AngularJS"
+              && targetStack === "Svelte"
+            ) {
+              demoResult = sampleSvelteCodeFromLegacy;
+            } else if (
+              fromLanguage === "AngularJS"
+              && targetStack === "Vue"
+            ) {
+              demoResult = sampleVueCodeFromLegacy;
+            } else if (
+              fromLanguage === "AngularJS"
+              && targetStack === "React"
+            ) {
+              demoResult = sampleReactCodeFromLegacy;
+            } else if (
+              fromLanguage === "AngularJS"
+              && targetStack === "Angular"
+            ) {
+              demoResult = sampleAngularCodeFromLegacy;
+            } else if (
+              [
+                "React",
+                "Vue",
+                "Svelte",
+                "Angular"
+              ].includes(targetStack)
+            ) {
+              // Any legacy code: show a sample conversion for the chosen modern stack
+              const stackSample = getSampleCode(targetStack);
+              if (stackSample) {
+                demoResult = stackSample;
+              } else {
+                const legacyLines = legacyCode.split("\n").slice(0, 12).join("\n");
+                demoResult = `// Conversion demo: from ${fromLanguage} to ${targetStack}\n${
+                  legacyLines ? legacyLines : "// (No code provided)"
+                } \n// ... conversion continues ...`;
+              }
+            } else {
+              // Old fallback
+              const legacyLines = legacyCode.split("\n").slice(0, 12).join("\n");
+              demoResult = `// Conversion demo: from ${fromLanguage} to ${targetStack}\n${
+                legacyLines ? legacyLines : "// (No code provided)"
+              } \n// ... conversion continues ...`;
+            }
           }
         }
         setGeneratedCode(demoResult);
