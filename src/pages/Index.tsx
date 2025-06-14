@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { languageData } from "@codemirror/language-data";
+import { languages } from "@codemirror/language-data";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { placeholder as codemirrorPlaceholder } from "@codemirror/view";
 import {
@@ -151,7 +150,7 @@ const Index = () => {
 
   const generatedCodeExtensions = [
     ...(isDocumentation
-      ? [markdown({ base: markdownLanguage, codeLanguages: languageData })]
+      ? [markdown({ base: markdownLanguage, codeLanguages: languages })]
       : [javascript({ jsx: true })]),
     codemirrorPlaceholder("Your new code will appear here."),
   ];
