@@ -86,6 +86,47 @@ const Counter = () => {
 
 export default Counter;`;
 
+const sampleMigrationDocument = `# Migration Analysis: Ember Counter Component ➡️ Modern Tech Stack
+
+## 1. Overview
+The provided legacy code is an Ember component implementing a simple counter with increment and decrement actions. It uses tracked properties and template bindings for state and UI updates.
+
+## 2. Key Components
+- **CounterComponent (JavaScript class):** Holds the counter logic, state, and methods.
+- **Template (Handlebars):** Renders the current count and provides increment/decrement buttons with event bindings.
+
+## 3. Data Flow
+- Data (the \`count\` variable) flows from the \`CounterComponent\` class into the template via tracked properties.
+- User interacts with buttons, triggering the \`increment\` and \`decrement\` actions, which mutate the state and cause re-render.
+
+## 4. State Management
+- State is local to the component and managed with Ember's \`@tracked\` decorator to trigger UI updates.
+
+## 5. Migration Strategy (Based on "Working Effectively with Legacy Code")
+- **Characterize Dependencies:** The Counter logic is self-contained but uses Ember framework features (\`@tracked\`, \`@action\`).
+- **Write Tests Around the Existing Behavior:** Before refactoring, ensure the counter behavior (increment/decrement) is covered by tests.
+- **Break External Dependencies:** Identify framework-specific logic (decorators, template syntax) and plan to abstract or replace them.
+- **Extract and Isolate:** Move business logic out of Ember-specific constructs to plain JavaScript/TypeScript classes or functions.
+- **Incremental Conversion:** Gradually port the component logic and template to the target stack (React, Vue, Svelte, etc.) while keeping tests green.
+
+## 6. Potential Challenges
+- **Template Syntax Differences:** Mapping Handlebars bindings to JSX/Vue/Svelte templates.
+- **State Management Patterns:** Translating tracked properties/actions to hooks or the target stack's equivalent.
+- **Event Binding Differences:** Migrating \`{{on "click"}}\` to target stack's event system.
+- **Testing:** Setting up tests in the new stack to match legacy behavior.
+
+---
+
+**Next Steps:**  
+1. Create integration/unit tests for counter behavior.  
+2. Abstract business logic from Ember-specific details.  
+3. Begin incremental rewrite, validating each step with tests.
+
+---
+
+*Migration guidance leverages principles from "Working Effectively with Legacy Code" by Michael Feathers.*
+`;
+
 const Index = () => {
   const [legacyCode, setLegacyCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -111,7 +152,9 @@ const Index = () => {
     if (apiProvider === 'Demo') {
       // Simulate API call for demo purposes
       setTimeout(() => {
-        setGeneratedCode(sampleReactCode);
+        setGeneratedCode(
+          targetStack.toLowerCase() === 'english' ? sampleMigrationDocument : sampleReactCode
+        );
         toast.success("Demo conversion successful!");
         setIsLoading(false);
       }, 1500);
