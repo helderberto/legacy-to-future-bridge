@@ -43,12 +43,14 @@ export default class CounterComponent extends Component {
 </div>
 `;
 
+// IMPORTANT: Replace this with your actual Perplexity API key.
+const PERPLEXITY_API_KEY = "YOUR_PERPLEXITY_API_KEY_HERE";
+
 const Index = () => {
   const [legacyCode, setLegacyCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   const [targetStack, setTargetStack] = useState("React");
   const [fromLanguage, setFromLanguage] = useState("Ember");
-  const [apiKey, setApiKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConvert = async () => {
@@ -56,8 +58,8 @@ const Index = () => {
       toast.error("Please paste your legacy code first.");
       return;
     }
-    if (!apiKey) {
-      toast.error("Please enter your Perplexity API key.");
+    if (PERPLEXITY_API_KEY === "YOUR_PERPLEXITY_API_KEY_HERE") {
+      toast.error("Please set your Perplexity API key in the code.");
       return;
     }
 
@@ -69,7 +71,7 @@ const Index = () => {
         code: legacyCode,
         fromLanguage,
         toLanguage: targetStack,
-        apiKey,
+        apiKey: PERPLEXITY_API_KEY,
       });
       setGeneratedCode(result);
       toast.success("Conversion successful!");
@@ -94,15 +96,6 @@ const Index = () => {
         <div className="flex items-center gap-3 mb-4 sm:mb-0">
           <GitBranch className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold tracking-tight">Legacy Code Converter</h1>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Input
-            type="password"
-            placeholder="Perplexity API Key"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="w-full sm:w-64"
-          />
         </div>
       </header>
 
